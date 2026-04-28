@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { apiCall, API_URL } from './api.js';
+import { apiCall, API_URL, subscribeBusy } from './api.js';
 
 const STORE_FIELDS = [
   'storeCode', 'storeName', 'location', 'state', 'clusterId', 'sqft',
@@ -98,10 +98,16 @@ export default function App() {
     );
   }
 
-  if (!token || !user) return <Login onLogin={onLogin} error={error} setError={setError} />;
+  if (!token || !user) return (
+    <>
+      <BusyOverlay />
+      <Login onLogin={onLogin} error={error} setError={setError} />
+    </>
+  );
 
   return (
     <div className="app">
+      <BusyOverlay />
       <div className="header">
         <h1>Mayank's Dashboard</h1>
         <div className="row">
@@ -125,6 +131,20 @@ export default function App() {
       {view === 'stores' && <Stores token={token} user={user} onAuthFail={logout} />}
       {view === 'salary' && <Salary token={token} onAuthFail={logout} />}
       {view === 'users' && <Users token={token} onAuthFail={logout} />}
+    </div>
+  );
+}
+
+function BusyOverlay() {
+  const [busy, setBusy] = useState(false);
+  useEffect(() => subscribeBusy(setBusy), []);
+  if (!busy) return null;
+  return (
+    <div className="busy-overlay" aria-busy="true" aria-live="polite">
+      <div className="busy-card">
+        <div className="spinner" />
+        <div>Working…</div>
+      </div>
     </div>
   );
 }

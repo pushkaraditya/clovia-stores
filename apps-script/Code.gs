@@ -93,9 +93,9 @@ function saveStore(store, user) {
   const data = sheet.getDataRange().getValues();
 
   const codeCol = headers.indexOf('storeCode');
-  let rowIdx = -1;
+  let rowIdx = -1, oldRow = null;
   for (let i = 1; i < data.length; i++) {
-    if (data[i][codeCol] === store.storeCode) { rowIdx = i + 1; break; }
+    if (data[i][codeCol] === store.storeCode) { rowIdx = i + 1; oldRow = data[i]; break; }
   }
 
   store.lastUpdated = new Date().toISOString();
@@ -108,7 +108,7 @@ function saveStore(store, user) {
     logAudit(user.userId, 'CREATE', store.storeCode, '', '', JSON.stringify(store));
   } else {
     sheet.getRange(rowIdx, 1, 1, headers.length).setValues([row]);
-    logAudit(user.userId, 'UPDATE', store.storeCode, '', '', JSON.stringify(store));
+    logFieldDiffs(user.userId, 'UPDATE', store.storeCode, headers, oldRow, row);
   }
 
   if (user.role === 'admin' && (store.smSalary !== undefined || store.csaSalaryPerHead !== undefined)) {
@@ -127,11 +127,18 @@ function deleteStore(storeCode, user) {
   if (user.role !== 'admin') return { success: false, error: 'Only admin can delete' };
 
   const sheet = ss.getSheetByName('Stores');
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   const data = sheet.getDataRange().getValues();
+  let snapshot = '';
   for (let i = data.length - 1; i >= 1; i--) {
-    if (data[i][0] === storeCode) sheet.deleteRow(i + 1);
+    if (data[i][0] === storeCode) {
+      const obj = {};
+      headers.forEach((h, j) => { obj[h] = data[i][j]; });
+      snapshot = JSON.stringify(obj);
+      sheet.deleteRow(i + 1);
+    }
   }
-  logAudit(user.userId, 'DELETE', storeCode, '', '', '');
+  logAudit(user.userId, 'DELETE', storeCode, '', snapshot, '');
   return { success: true };
 }
 
@@ -158,16 +165,20 @@ function saveUser(u, user) {
   const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
   const data = sheet.getDataRange().getValues();
 
-  let rowIdx = -1;
+  let rowIdx = -1, oldRow = null;
   for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === u.userId) { rowIdx = i + 1; break; }
+    if (data[i][0] === u.userId) { rowIdx = i + 1; oldRow = data[i]; break; }
   }
 
   const row = headers.map(h => u[h] !== undefined ? u[h] : '');
-  if (rowIdx === -1) sheet.appendRow(row);
-  else sheet.getRange(rowIdx, 1, 1, headers.length).setValues([row]);
-
-  logAudit(user.userId, rowIdx === -1 ? 'USER_CREATE' : 'USER_UPDATE', u.userId, '', '', '');
+  if (rowIdx === -1) {
+    sheet.appendRow(row);
+    const safe = { ...u }; if (safe.pin) safe.pin = '••••';
+    logAudit(user.userId, 'USER_CREATE', u.userId, '', '', JSON.stringify(safe));
+  } else {
+    sheet.getRange(rowIdx, 1, 1, headers.length).setValues([row]);
+    logFieldDiffs(user.userId, 'USER_UPDATE', u.userId, headers, oldRow, row, ['pin']);
+  }
   return { success: true };
 }
 
@@ -256,4 +267,26 @@ function sheetToObjects(sheetName) {
 function logAudit(userId, action, storeCode, field, oldValue, newValue) {
   const sheet = ss.getSheetByName('AuditLog');
   sheet.appendRow([new Date(), userId, action, storeCode, field, oldValue, newValue]);
+}
+
+// Append one audit row per changed field. `mask` lists fields whose values
+// should be redacted in the log (e.g. PINs).
+function logFieldDiffs(userId, action, key, headers, oldRow, newRow, mask) {
+  const sheet = ss.getSheetByName('AuditLog');
+  const masked = (mask || []).reduce((m, f) => (m[f] = true, m), {});
+  const skip = { lastUpdated: true, updatedBy: true };
+  const ts = new Date();
+  let wrote = 0;
+  for (let i = 0; i < headers.length; i++) {
+    const h = headers[i];
+    if (skip[h]) continue;
+    const oldV = oldRow ? oldRow[i] : '';
+    const newV = newRow[i];
+    if (String(oldV) === String(newV)) continue;
+    const ov = masked[h] ? '••••' : oldV;
+    const nv = masked[h] ? '••••' : newV;
+    sheet.appendRow([ts, userId, action, key, h, ov, nv]);
+    wrote++;
+  }
+  if (wrote === 0) sheet.appendRow([ts, userId, action, key, '', '', '(no changes)']);
 }
