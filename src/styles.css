@@ -1,0 +1,76 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+}
+.app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; background: #fff; border-radius: 8px; margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.header h1 { margin: 0; font-size: 18px; }
+.header .who { font-size: 13px; color: #666; }
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tabs button {
+  background: #fff; border: 1px solid #ddd; padding: 8px 14px; border-radius: 6px;
+  cursor: pointer; font-size: 14px;
+}
+.tabs button.active { background: #e91e63; color: #fff; border-color: #e91e63; }
+.card {
+  background: #fff; padding: 16px; border-radius: 8px; margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.tile { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.tile .label { font-size: 12px; color: #666; text-transform: uppercase; }
+.tile .value { font-size: 24px; font-weight: 600; margin-top: 4px; }
+.tile.alert .value { color: #e53935; }
+.tile.ok .value { color: #43a047; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+th { background: #fafafa; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #555; }
+tr:hover td { background: #fafbff; }
+input, select, textarea {
+  padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%;
+}
+button.primary {
+  background: #e91e63; color: #fff; border: 0; padding: 9px 16px; border-radius: 6px;
+  cursor: pointer; font-size: 14px;
+}
+button.primary:disabled { opacity: .5; cursor: not-allowed; }
+button.ghost {
+  background: transparent; border: 1px solid #ccc; padding: 6px 12px; border-radius: 6px;
+  cursor: pointer; font-size: 13px;
+}
+button.danger { background: #e53935; color: #fff; border: 0; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.login-wrap { max-width: 380px; margin: 80px auto; }
+.login-wrap h1 { text-align: center; margin-bottom: 8px; }
+.login-wrap .subtitle { text-align: center; color: #666; margin-bottom: 24px; font-size: 14px; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+.error { background: #ffebee; color: #c62828; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
+.success { background: #e8f5e9; color: #2e7d32; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge.ok { background: #e8f5e9; color: #2e7d32; }
+.badge.breach { background: #ffebee; color: #c62828; }
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center;
+  justify-content: center; z-index: 100; padding: 16px;
+}
+.modal {
+  background: #fff; border-radius: 8px; padding: 20px; max-width: 600px; width: 100%;
+  max-height: 90vh; overflow: auto;
+}
+.modal h2 { margin-top: 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .header h1 { font-size: 16px; }
+  table { font-size: 12px; }
+  th, td { padding: 6px; }
+}
